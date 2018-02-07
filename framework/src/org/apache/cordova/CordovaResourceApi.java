@@ -38,9 +38,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext;
+import java.lang.Exception;
 import java.net.URL;
 import java.nio.channels.FileChannel;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
+
+import org.apache.cordova.CordovaSocketFactory;;
 
 /**
  * What this class provides:
@@ -185,7 +193,19 @@ public class CordovaResourceApi {
             case URI_TYPE_HTTP:
             case URI_TYPE_HTTPS: {
                 try {
-                    HttpURLConnection conn = (HttpURLConnection)new URL(uri.toString()).openConnection();
+
+                    // HttpURLConnection conn = (HttpURLConnection)new URL(uri.toString()).openConnection();
+                    HttpURLConnection conn;
+
+                    if (getUriType(uri) == URI_TYPE_HTTPS) {
+                        HttpsURLConnection secureConn = (HttpsURLConnection)new URL(uri.toString()).openConnection();
+                        secureConn.setSSLSocketFactory(new CordovaSocketFactory());
+                        conn = secureConn;
+                    }
+                    else {
+                        conn = (HttpURLConnection)new URL(uri.toString()).openConnection();
+                    }                        
+                    
                     conn.setDoInput(false);
                     conn.setRequestMethod("HEAD");
                     String mimeType = conn.getHeaderField("Content-Type");
@@ -195,6 +215,8 @@ public class CordovaResourceApi {
                     return mimeType;
                 } catch (IOException e) {
                 }
+                catch (KeyManagementException e) {}
+                catch (NoSuchAlgorithmException e) {}
             }
         }
         
@@ -228,7 +250,7 @@ public class CordovaResourceApi {
      * @throws Throws an IOException if the URI cannot be opened.
      * @throws Throws an IllegalStateException if called on a foreground thread.
      */
-    public OpenForReadResult openForRead(Uri uri) throws IOException {
+    public OpenForReadResult openForRead(Uri uri) throws IOException, Exception {
         return openForRead(uri, false);
     }
 
@@ -240,7 +262,7 @@ public class CordovaResourceApi {
      * @throws Throws an IOException if the URI cannot be opened.
      * @throws Throws an IllegalStateException if called on a foreground thread and skipThreadCheck is false.
      */
-    public OpenForReadResult openForRead(Uri uri, boolean skipThreadCheck) throws IOException {
+    public OpenForReadResult openForRead(Uri uri, boolean skipThreadCheck) throws IOException, Exception {
         if (!skipThreadCheck) {
             assertBackgroundThread();
         }
@@ -284,7 +306,17 @@ public class CordovaResourceApi {
             }
             case URI_TYPE_HTTP:
             case URI_TYPE_HTTPS: {
-                HttpURLConnection conn = (HttpURLConnection)new URL(uri.toString()).openConnection();
+                HttpURLConnection conn;
+
+                if (getUriType(uri) == URI_TYPE_HTTPS) {
+                    HttpsURLConnection secureConn = (HttpsURLConnection)new URL(uri.toString()).openConnection();
+                    secureConn.setSSLSocketFactory(new CordovaSocketFactory());
+                    conn = secureConn;
+                }
+                else {
+                    conn = (HttpURLConnection)new URL(uri.toString()).openConnection();
+                }
+                
                 conn.setDoInput(true);
                 String mimeType = conn.getHeaderField("Content-Type");
                 if (mimeType != null) {
@@ -305,6 +337,12 @@ public class CordovaResourceApi {
         }
         throw new FileNotFoundException("URI not supported by CordovaResourceApi: " + uri);
     }
+    
+    // private SSLSocketFactory getFactorySimple() throws Exception {
+    //     SSLContext context = SSLContext.getInstance("TLSv1.2");
+    //     context.init(null, null, null);
+    //     return context.getSocketFactory();
+    // }
 
     public OutputStream openOutputStream(Uri uri) throws IOException {
         return openOutputStream(uri, false);
@@ -337,9 +375,22 @@ public class CordovaResourceApi {
         throw new FileNotFoundException("URI not supported by CordovaResourceApi: " + uri);
     }
 
-    public HttpURLConnection createHttpConnection(Uri uri) throws IOException {
+    public HttpURLConnection createHttpConnection(Uri uri) throws IOException, KeyManagementException, NoSuchAlgorithmException {
         assertBackgroundThread();
-        return (HttpURLConnection)new URL(uri.toString()).openConnection();
+
+        HttpURLConnection conn;
+
+        if (getUriType(uri) == URI_TYPE_HTTPS) {
+            HttpsURLConnection secureConn = (HttpsURLConnection)new URL(uri.toString()).openConnection();
+            secureConn.setSSLSocketFactory(new CordovaSocketFactory());
+            conn = (HttpURLConnection)secureConn;
+        }
+        else {
+            conn = (HttpURLConnection)new URL(uri.toString()).openConnection();
+        }
+
+        return conn;
+        // return (HttpURLConnection)new URL(uri.toString()).openConnection();
     }
     
     // Copies the input to the output in the most efficient manner possible.
@@ -381,12 +432,12 @@ public class CordovaResourceApi {
         }
     }
 
-    public void copyResource(Uri sourceUri, OutputStream outputStream) throws IOException {
+    public void copyResource(Uri sourceUri, OutputStream outputStream) throws IOException, Exception {
         copyResource(openForRead(sourceUri), outputStream);
     }
 
     // Added in 3.5.0.
-    public void copyResource(Uri sourceUri, Uri dstUri) throws IOException {
+    public void copyResource(Uri sourceUri, Uri dstUri) throws IOException, Exception {
         copyResource(openForRead(sourceUri), openOutputStream(dstUri));
     }
     

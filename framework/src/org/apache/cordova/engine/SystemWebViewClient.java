@@ -74,7 +74,7 @@ public class SystemWebViewClient extends WebViewClient {
      * @param url           The url to be loaded.
      * @return              true to override, false for default behavior
      */
-	@Override
+    @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         return parentEngine.client.onNavigationAttempt(url);
     }
@@ -112,7 +112,7 @@ public class SystemWebViewClient extends WebViewClient {
      * @param request
      */
     @Override
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(21)
     public void onReceivedClientCertRequest (WebView view, ClientCertRequest request)
     {
 
@@ -219,6 +219,7 @@ public class SystemWebViewClient extends WebViewClient {
      * @param handler       An SslErrorHandler object that will handle the user's response.
      * @param error         The SSL error object.
      */
+    @TargetApi(8)
     @Override
     public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
 
@@ -315,6 +316,7 @@ public class SystemWebViewClient extends WebViewClient {
         this.authenticationTokens.clear();
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         try {
@@ -344,10 +346,14 @@ public class SystemWebViewClient extends WebViewClient {
             // Results in a 404.
             return new WebResourceResponse("text/plain", "UTF-8", null);
         }
+        catch (Exception e) {
+            LOG.e(TAG, "Unknown erro has occured while loading a file.", e);
+            return new WebResourceResponse("text/plain", "UTF-8", null);
+        }
     }
 
     private static boolean needsKitKatContentUrlFix(Uri uri) {
-        return "content".equals(uri.getScheme());
+        return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && "content".equals(uri.getScheme());
     }
 
     private static boolean needsSpecialsInAssetUrlFix(Uri uri) {
@@ -362,6 +368,11 @@ public class SystemWebViewClient extends WebViewClient {
             return false;
         }
 
+        switch(android.os.Build.VERSION.SDK_INT){
+            case android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH:
+            case android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1:
+                return true;
+        }
         return false;
     }
 }
