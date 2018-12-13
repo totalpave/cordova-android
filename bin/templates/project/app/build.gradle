@@ -103,6 +103,10 @@ if (hasBuildExtras2) {
     apply from: '../build-extras.gradle'
 }
 
+if (file('../../../build-extras.gradle').exists()) {
+    apply from: '../../../build-extras.gradle'
+}
+
 // Set property defaults after extension .gradle files.
 if (ext.cdvCompileSdkVersion == null) {
     ext.cdvCompileSdkVersion = privateHelpers.getProjectTarget()
