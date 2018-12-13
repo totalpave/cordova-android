@@ -141,9 +141,9 @@ function writeProjectProperties (projectPath, target_api) {
 }
 
 // This makes no sense, what if you're building with a different build system?
-function prepBuildFiles (projectPath, builder) {
+function prepBuildFiles (projectPath) {
     var buildModule = require(path.resolve(projectPath, 'cordova/lib/builders/builders'));
-    buildModule.getBuilder(builder).prepBuildFiles();
+    buildModule.getBuilder().prepBuildFiles();
 }
 
 function copyBuildRules (projectPath, isLegacy) {
@@ -160,7 +160,7 @@ function copyBuildRules (projectPath, isLegacy) {
     }
 }
 
-function copyScripts (projectPath) {
+function copyScripts (projectPath, options) {
     var bin = path.join(ROOT, 'bin');
     var srcScriptsDir = path.join(bin, 'templates', 'cordova');
     var destScriptsDir = path.join(projectPath, 'cordova');
@@ -168,7 +168,7 @@ function copyScripts (projectPath) {
     shell.rm('-rf', destScriptsDir);
     // Copy in the new ones.
     shell.cp('-r', srcScriptsDir, projectPath);
-    shell.cp('-r', path.join(ROOT, 'node_modules'), destScriptsDir);
+    if (options.copyPlatformNodeModules) shell.cp('-r', path.join(ROOT, 'node_modules'), destScriptsDir);
     shell.cp(path.join(bin, 'check_reqs*'), destScriptsDir);
     shell.cp(path.join(bin, 'android_sdk_version*'), destScriptsDir);
     var check_reqs = path.join(destScriptsDir, 'check_reqs');
@@ -194,7 +194,7 @@ function validatePackageName (package_name) {
     var msg = 'Error validating package name. ';
 
     if (!/^[a-zA-Z][a-zA-Z0-9_]+(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(package_name)) {
-        return Q.reject(new CordovaError(msg + 'Package name must look like: com.company.Name'));
+        return Q.reject(new CordovaError(msg + 'Must look like: `com.company.Name`. Currently is: `' + package_name + '`'));
     }
 
     // Class is a reserved word
@@ -324,12 +324,12 @@ exports.create = function (project_path, config, options, events) {
                 var manifest_path = path.join(app_path, 'AndroidManifest.xml');
                 manifest.write(manifest_path);
 
-                exports.copyScripts(project_path);
+                exports.copyScripts(project_path, options);
                 exports.copyBuildRules(project_path);
             });
             // Link it to local android install.
             exports.writeProjectProperties(project_path, target_api);
-            exports.prepBuildFiles(project_path, 'studio');
+            exports.prepBuildFiles(project_path);
             events.emit('log', generateDoneMessage('create', options.link));
         }).thenResolve(project_path);
 };

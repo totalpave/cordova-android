@@ -75,6 +75,7 @@ public class SystemWebViewClient extends WebViewClient {
      * @return              true to override, false for default behavior
      */
     @Override
+    @SuppressWarnings("deprecation")
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         return parentEngine.client.onNavigationAttempt(url);
     }
@@ -186,6 +187,7 @@ public class SystemWebViewClient extends WebViewClient {
      * @param failingUrl    The url that failed to load.
      */
     @Override
+    @SuppressWarnings("deprecation")
     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
         // Ignore error due to stopLoading().
         if (!isCurrentlyLoading) {
@@ -318,6 +320,7 @@ public class SystemWebViewClient extends WebViewClient {
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
+    @SuppressWarnings("deprecation")
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         try {
             // Check the against the whitelist and lock out access to the WebView directory
