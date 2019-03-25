@@ -43,8 +43,14 @@ module.exports.prepare = function (cordovaProject, options) {
 
     this._config = updateConfigFilesFrom(cordovaProject.projectConfig, munger, this.locations);
 
+    // Get the min SDK version from config.xml
+    const minSdkVersion = this._config.getPreference('android-minSdkVersion', 'android');
+
+    let gradlePropertiesUserConfig = {};
+    if (minSdkVersion) gradlePropertiesUserConfig.cdvMinSdkVersion = minSdkVersion;
+
     let gradlePropertiesParser = new GradlePropertiesParser(this.locations.root);
-    gradlePropertiesParser.configure();
+    gradlePropertiesParser.configure(gradlePropertiesUserConfig);
 
     // Update own www dir with project's www assets and plugins' assets and js-files
     return Q.when(updateWww(cordovaProject, this.locations)).then(function () {
@@ -183,7 +189,7 @@ function updateProjectAccordingTo (platformConfig, locations) {
         strings.find('string[@name="launcher_name"]').text = shortName.replace(/\'/g, '\\\'');
     }
 
-    fs.writeFileSync(locations.strings, strings.write({indent: 4}), 'utf-8');
+    fs.writeFileSync(locations.strings, strings.write({ indent: 4 }), 'utf-8');
     events.emit('verbose', 'Wrote out android application name "' + name + '" to ' + locations.strings);
 
     // Java packages cannot support dashes
@@ -661,7 +667,7 @@ function cleanFileResources (projectRoot, projectConfig, platformDir) {
 
         FileUpdater.updatePaths(
             resourceMap, {
-                rootDir: projectRoot, all: true}, logFileOp);
+                rootDir: projectRoot, all: true }, logFileOp);
     }
 }
 
