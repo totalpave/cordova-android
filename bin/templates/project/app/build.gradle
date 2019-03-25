@@ -196,7 +196,7 @@ task cdvPrintProps {
     }
 }
 
-xwalk64bit = getConfigPreference("xwalk64bit");
+def xwalk64bit = getConfigPreference("xwalk64bit");
 println xwalk64bit == null ? "NO" : "YES";
 
 android {
