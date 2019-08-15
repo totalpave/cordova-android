@@ -66,6 +66,34 @@ describe('ProjectBuilder', () => {
             expect(args[0]).toBe('cdvBuildDebug');
         });
 
+        it('should set apk release', () => {
+            const args = builder.getArgs('release', {
+                packageType: 'apk'
+            });
+            expect(args[0]).withContext(args).toBe('cdvBuildRelease');
+        });
+
+        it('should set apk debug', () => {
+            const args = builder.getArgs('debug', {
+                packageType: 'apk'
+            });
+            expect(args[0]).withContext(args).toBe('cdvBuildDebug');
+        });
+
+        it('should set bundle release', () => {
+            const args = builder.getArgs('release', {
+                packageType: 'bundle'
+            });
+            expect(args[0]).withContext(args).toBe(':app:bundleRelease');
+        });
+
+        it('should set bundle debug', () => {
+            const args = builder.getArgs('debug', {
+                packageType: 'bundle'
+            });
+            expect(args[0]).withContext(args).toBe(':app:bundleDebug');
+        });
+
         it('should add architecture if it is passed', () => {
             const arch = 'unittest';
             const args = builder.getArgs('debug', { arch });
@@ -248,11 +276,11 @@ describe('ProjectBuilder', () => {
             };
 
             const expectedResult = ['app-release.apk', 'app-debug.apk', 'app-release-unsigned.apk',
-                'app-release-arm.apk', 'app-debug-arm.apk', 'app-release-x86.apk', 'app-debug-x86.apk'];
+                'app-release-arm.apk', 'app-release-x86.apk', 'app-debug-x86.apk', 'app-debug-arm.apk'];
 
             const fsSpy = jasmine.createSpyObj('fs', ['statSync']);
             fsSpy.statSync.and.callFake(filename => {
-                return { mtime: APKs[filename].getTime() };
+                return { mtime: APKs[filename] };
             });
             ProjectBuilder.__set__('fs', fsSpy);
 
